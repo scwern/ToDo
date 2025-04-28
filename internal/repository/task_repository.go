@@ -6,21 +6,21 @@ import (
 )
 
 type TaskRepository struct {
-	tasks  []task.Taks
+	tasks  []task.Task
 	nextID int
 }
 
 func NewTaskRepository() *TaskRepository {
 	return &TaskRepository{
-		tasks:  make([]task.Taks, 0),
+		tasks:  make([]task.Task, 0),
 		nextID: 1,
 	}
 }
-func (r *TaskRepository) GetAll() []task.Taks {
+func (r *TaskRepository) GetAll() []task.Task {
 	return r.tasks
 }
 
-func (r *TaskRepository) GetById(id int) (*task.Taks, error) {
+func (r *TaskRepository) GetById(id int) (*task.Task, error) {
 	for _, t := range r.tasks {
 		if t.ID == id {
 			return &t, nil
@@ -29,16 +29,23 @@ func (r *TaskRepository) GetById(id int) (*task.Taks, error) {
 	return nil, errors.New("task not found")
 }
 
-func (r *TaskRepository) Create(t task.Taks) task.Taks {
+func (r *TaskRepository) Create(t task.Task) task.Task {
+	if t.Status == "" {
+		t.Status = task.StatusNew
+	}
+
 	t.ID = r.nextID
 	r.nextID++
 	r.tasks = append(r.tasks, t)
 	return t
 }
 
-func (r *TaskRepository) Update(id int, updated task.Taks) (*task.Taks, error) {
+func (r *TaskRepository) Update(id int, updated task.Task) (*task.Task, error) {
 	for i, t := range r.tasks {
 		if t.ID == id {
+			if updated.Status == "" {
+				updated.Status = t.Status
+			}
 			updated.ID = id
 			r.tasks[i] = updated
 			return &r.tasks[i], nil

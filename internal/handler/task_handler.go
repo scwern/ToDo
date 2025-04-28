@@ -38,10 +38,14 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 }
 
 func (h *TaskHandler) Create(c *gin.Context) {
-	var t task.Taks
+	var t task.Task
 	if err := c.ShouldBindJSON(&t); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	if t.Status == "" {
+		t.Status = task.StatusNew
 	}
 
 	created := h.service.Create(t)
@@ -55,10 +59,13 @@ func (h *TaskHandler) Update(c *gin.Context) {
 		return
 	}
 
-	var t task.Taks
+	var t task.Task
 	if err := c.ShouldBindJSON(&t); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+	if t.Status == "" {
+		t.Status = task.StatusNew
 	}
 
 	updated, err := h.service.Update(id, t)
