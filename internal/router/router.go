@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(taskHandler *handler.TaskHandler) *gin.Engine {
+func NewRouter(taskHandler *handler.TaskHandler, userHandler *handler.UserHandler) *gin.Engine {
 	r := gin.Default()
 
 	tasks := r.Group("/tasks")
@@ -15,6 +15,15 @@ func NewRouter(taskHandler *handler.TaskHandler) *gin.Engine {
 		tasks.POST("", taskHandler.Create)
 		tasks.PUT("/:id", taskHandler.Update)
 		tasks.DELETE("/:id", taskHandler.Delete)
+	}
+
+	users := r.Group("/users")
+	{
+		users.GET("", userHandler.GetAll)
+		users.GET("/:id", userHandler.GetByID)
+		users.POST("", userHandler.Create)
+		users.PUT("/:id", userHandler.Update)
+		users.DELETE("/:id", userHandler.Delete)
 	}
 
 	return r
