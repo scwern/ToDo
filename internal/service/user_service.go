@@ -3,6 +3,7 @@ package service
 import (
 	"ToDo/internal/domain/user"
 	"ToDo/internal/repository"
+	"errors"
 )
 
 type UserService struct {
@@ -31,4 +32,14 @@ func (s *UserService) Update(id int, updated user.User) (*user.User, error) {
 
 func (s *UserService) Delete(id int) error {
 	return s.repo.Delete(id)
+}
+
+func (s *UserService) Login(email, password string) (*user.User, error) {
+	users := s.repo.GetAll()
+	for _, u := range users {
+		if u.Email == email && u.Password == password {
+			return &u, nil
+		}
+	}
+	return nil, errors.New("invalid email or password")
 }
