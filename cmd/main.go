@@ -9,9 +9,15 @@ import (
 
 func main() {
 	taskRepo := repository.NewTaskRepository()
-	taskService := service.NewTaskService(taskRepo)
-	taskHandler := handlers.NewTaskHandler(taskService)
+	userRepo := repository.NewUserRepository()
 
-	r := server.NewRouter(taskHandler)
+	taskService := service.NewTaskService(taskRepo)
+	userService := service.NewUserService(userRepo)
+
+	taskHandler := handlers.NewTaskHandler(taskService)
+	userHandler := handlers.NewUserHandler(userService)
+
+	r := server.NewRouter(taskHandler, userHandler)
+
 	r.Run(":8080")
 }
