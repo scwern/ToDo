@@ -1,11 +1,13 @@
-package handler
+package handlers
 
 import (
 	"ToDo/internal/domain/task"
+	"ToDo/internal/dto"
 	"ToDo/internal/service"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
-	"strconv"
 )
 
 type TaskHandler struct {
@@ -18,15 +20,26 @@ func NewTaskHandler(service *service.TaskService) *TaskHandler {
 
 func (h *TaskHandler) GetAll(c *gin.Context) {
 	tasks := h.service.GetAll()
-	c.JSON(http.StatusOK, tasks)
+
+	var taskDTOs []dto.TaskDTO
+	for _, t := range tasks {
+		taskDTOs = append(taskDTOs, dto.ToTaskDTO(t))
+	}
+
+	c.JSON(http.StatusOK, taskDTOs)
 }
 
 func (h *TaskHandler) GetByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idStr := c.Param("id")
+	fmt.Println("Received ID:", idStr)
+
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
+
+	fmt.Println("Parsed ID:", id)
 
 	task, err := h.service.GetById(id)
 	if err != nil {
@@ -34,28 +47,30 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, task)
+	fmt.Println("Found task:", task)
+
+	c.JSON(http.StatusOK, dto.ToTaskDTO(*task))
 }
 
 func (h *TaskHandler) Create(c *gin.Context) {
-	var t task.Task
-	if err := c.ShouldBindJSON(&t); err != nil {
+	var input dto.CreateTaskDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if t.Status == "" {
-		t.Status = task.StatusNew
-	}
+	newTask := dto.ToTask(input)
+	created := h.service.Create(newTask)
+	response := dto.ToTaskDTO(created)
 
-	created := h.service.Create(t)
-	c.JSON(http.StatusCreated, created)
+	c.JSON(http.StatusCreated, response)
 }
 
 func (h *TaskHandler) Update(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
 
@@ -63,9 +78,6 @@ func (h *TaskHandler) Update(c *gin.Context) {
 	if err := c.ShouldBindJSON(&t); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-	}
-	if t.Status == "" {
-		t.Status = task.StatusNew
 	}
 
 	updated, err := h.service.Update(id, t)
@@ -78,9 +90,10 @@ func (h *TaskHandler) Update(c *gin.Context) {
 }
 
 func (h *TaskHandler) Delete(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
 

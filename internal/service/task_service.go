@@ -3,13 +3,15 @@ package service
 import (
 	"ToDo/internal/domain/task"
 	"ToDo/internal/repository"
+	"fmt"
+	"github.com/google/uuid"
 )
 
 type TaskService struct {
-	repo *repository.TaskRepository
+	repo repository.TaskRepositoryInterface
 }
 
-func NewTaskService(repo *repository.TaskRepository) *TaskService {
+func NewTaskService(repo repository.TaskRepositoryInterface) *TaskService {
 	return &TaskService{repo: repo}
 }
 
@@ -17,24 +19,29 @@ func (s *TaskService) GetAll() []task.Task {
 	return s.repo.GetAll()
 }
 
-func (s *TaskService) GetById(id int) (*task.Task, error) {
-	return s.repo.GetById(id)
+func (s *TaskService) GetById(id uuid.UUID) (*task.Task, error) {
+	fmt.Println("Fetching task with ID:", id)
+	task, err := s.repo.GetById(id)
+	if err != nil {
+		fmt.Println("Error fetching task:", err)
+		return nil, err
+	}
+	fmt.Println("Found task:", task)
+	return task, nil
 }
 
 func (s *TaskService) Create(t task.Task) task.Task {
-	if t.Status == "" {
-		t.Status = task.StatusNew
-	}
+	fmt.Printf("Task received in service: %+v\n", t)
 	return s.repo.Create(t)
 }
 
-func (s *TaskService) Update(id int, updated task.Task) (*task.Task, error) {
-	if updated.Status == "" {
-		updated.Status = task.StatusNew
+func (s *TaskService) Update(id uuid.UUID, updated task.Task) (*task.Task, error) {
+	if updated.Status() == "" {
+		updated.SetStatus(task.StatusNew)
 	}
 	return s.repo.Update(id, updated)
 }
 
-func (s *TaskService) Delete(id int) error {
+func (s *TaskService) Delete(id uuid.UUID) error {
 	return s.repo.Delete(id)
 }
