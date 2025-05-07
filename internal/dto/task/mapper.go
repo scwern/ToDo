@@ -1,4 +1,4 @@
-package dto
+package task
 
 import (
 	"ToDo/internal/domain/task"
@@ -13,8 +13,8 @@ func ToTask(dto CreateTaskDTO) task.Task {
 	return task.NewTask(dto.Title, dto.Description, status)
 }
 
-func ToTaskDTO(t task.Task) TaskDTO {
-	return TaskDTO{
+func ToTaskDTO(t task.Task) DTO {
+	return DTO{
 		ID:          t.ID().String(),
 		Title:       t.Title(),
 		Description: t.Description(),

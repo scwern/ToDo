@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"ToDo/internal/domain/user"
+	userdto "ToDo/internal/dto/user"
 	"ToDo/internal/service"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
-	"strconv"
 )
 
 type UserHandler struct {
@@ -18,40 +20,63 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 
 func (h *UserHandler) GetAll(c *gin.Context) {
 	users := h.service.GetAll()
-	c.JSON(http.StatusOK, users)
+
+	var userDTOs []userdto.DTO
+	for _, u := range users {
+		userDTOs = append(userDTOs, userdto.ToUserDTO(u))
+	}
+
+	c.JSON(http.StatusOK, userDTOs)
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idStr := c.Param("id")
+	fmt.Println("Received ID:", idStr)
+
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
 
-	u, err := h.service.GetById(id)
+	fmt.Println("Parsed ID:", id)
+
+	user, err := h.service.GetById(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, u)
+	fmt.Println("Found user:", user)
+
+	c.JSON(http.StatusOK, userdto.ToUserDTO(*user))
 }
 
 func (h *UserHandler) Create(c *gin.Context) {
-	var u user.User
-	if err := c.ShouldBindJSON(&u); err != nil {
+	var input userdto.CreateUserDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	created := h.service.Create(u)
-	c.JSON(http.StatusCreated, created)
+	_, err := h.service.GetByEmail(input.Email)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "User with this email already exists"})
+		return
+	}
+
+	newUser := userdto.ToUser(input)
+	created := h.service.Create(newUser)
+	response := userdto.ToUserDTO(created)
+
+	c.JSON(http.StatusCreated, response)
 }
 
 func (h *UserHandler) Update(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
 
@@ -71,9 +96,10 @@ func (h *UserHandler) Update(c *gin.Context) {
 }
 
 func (h *UserHandler) Delete(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
 

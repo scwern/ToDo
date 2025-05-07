@@ -3,57 +3,67 @@ package repository
 import (
 	"ToDo/internal/domain/user"
 	"errors"
+	"fmt"
+	"github.com/google/uuid"
 )
 
 type UserRepository struct {
-	users  []user.User
-	nextID int
+	users map[uuid.UUID]user.User
 }
 
 func NewUserRepository() *UserRepository {
 	return &UserRepository{
-		users:  make([]user.User, 0),
-		nextID: 1,
+		users: make(map[uuid.UUID]user.User),
 	}
 }
 
-func (r *UserRepository) GetAll() []user.User {
-	return r.users
-}
-
-func (r *UserRepository) GetById(id int) (*user.User, error) {
+func (r *UserRepository) GetByEmail(email string) (*user.User, error) {
 	for _, u := range r.users {
-		if u.ID == id {
+		if u.Email() == email {
 			return &u, nil
 		}
 	}
 	return nil, errors.New("user not found")
 }
 
-func (r *UserRepository) Create(u user.User) user.User {
-	u.ID = r.nextID
-	r.nextID++
-	r.users = append(r.users, u)
-	return u
+func (r *UserRepository) GetAll() []user.User {
+	var result []user.User
+	for _, u := range r.users {
+		result = append(result, u)
+	}
+	return result
 }
 
-func (r *UserRepository) Update(id int, updated user.User) (*user.User, error) {
-	for i, u := range r.users {
-		if u.ID == id {
-			updated.ID = id
-			r.users[i] = updated
-			return &r.users[i], nil
-		}
+func (r *UserRepository) GetById(id uuid.UUID) (*user.User, error) {
+	if u, exists := r.users[id]; exists {
+		return &u, nil
 	}
 	return nil, errors.New("user not found")
 }
 
-func (r *UserRepository) Delete(id int) error {
-	for i, u := range r.users {
-		if u.ID == id {
-			r.users = append(r.users[:i], r.users[i+1:]...)
-			return nil
-		}
+func (r *UserRepository) Create(u user.User) user.User {
+	fmt.Println("Adding user to repository:", u)
+	r.users[u.ID()] = u
+	return u
+}
+
+func (r *UserRepository) Update(id uuid.UUID, updated user.User) (*user.User, error) {
+	if existingUser, exists := r.users[id]; exists {
+		existingUser.SetName(updated.Name())
+		existingUser.SetEmail(updated.Email())
+		existingUser.SetPassword(updated.Password())
+
+		r.users[id] = existingUser
+
+		return &existingUser, nil
+	}
+	return nil, errors.New("user not found")
+}
+
+func (r *UserRepository) Delete(id uuid.UUID) error {
+	if _, exists := r.users[id]; exists {
+		delete(r.users, id)
+		return nil
 	}
 	return errors.New("user not found")
 }
