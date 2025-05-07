@@ -11,12 +11,19 @@ type TaskRepository struct {
 	tasks map[uuid.UUID]task.Task
 }
 
-var _ TaskRepositoryInterface = (*TaskRepository)(nil)
-
 func NewTaskRepository() *TaskRepository {
 	return &TaskRepository{
 		tasks: make(map[uuid.UUID]task.Task),
 	}
+}
+
+func (r *TaskRepository) GetByTitle(title string) (*task.Task, error) {
+	for _, t := range r.tasks {
+		if t.Title() == title {
+			return &t, nil
+		}
+	}
+	return nil, errors.New("task with this title not found")
 }
 
 func (r *TaskRepository) GetAll() []task.Task {

@@ -2,21 +2,33 @@ package service
 
 import (
 	"ToDo/internal/domain/task"
-	"ToDo/internal/repository"
 	"fmt"
 	"github.com/google/uuid"
 )
 
-type TaskService struct {
-	repo repository.TaskRepositoryInterface
+type TaskRepositoryInterface interface {
+	GetAll() []task.Task
+	GetById(id uuid.UUID) (*task.Task, error)
+	Create(t task.Task) task.Task
+	Update(id uuid.UUID, updated task.Task) (*task.Task, error)
+	Delete(id uuid.UUID) error
+	GetByTitle(title string) (*task.Task, error)
 }
 
-func NewTaskService(repo repository.TaskRepositoryInterface) *TaskService {
+type TaskService struct {
+	repo TaskRepositoryInterface
+}
+
+func NewTaskService(repo TaskRepositoryInterface) *TaskService {
 	return &TaskService{repo: repo}
 }
 
 func (s *TaskService) GetAll() []task.Task {
 	return s.repo.GetAll()
+}
+
+func (s *TaskService) GetByTitle(title string) (*task.Task, error) {
+	return s.repo.GetByTitle(title)
 }
 
 func (s *TaskService) GetById(id uuid.UUID) (*task.Task, error) {

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"ToDo/internal/domain/task"
-	"ToDo/internal/dto"
+	taskdto "ToDo/internal/dto/task"
 	"ToDo/internal/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -21,9 +21,9 @@ func NewTaskHandler(service *service.TaskService) *TaskHandler {
 func (h *TaskHandler) GetAll(c *gin.Context) {
 	tasks := h.service.GetAll()
 
-	var taskDTOs []dto.TaskDTO
+	var taskDTOs []taskdto.DTO
 	for _, t := range tasks {
-		taskDTOs = append(taskDTOs, dto.ToTaskDTO(t))
+		taskDTOs = append(taskDTOs, taskdto.ToTaskDTO(t))
 	}
 
 	c.JSON(http.StatusOK, taskDTOs)
@@ -49,19 +49,25 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 
 	fmt.Println("Found task:", task)
 
-	c.JSON(http.StatusOK, dto.ToTaskDTO(*task))
+	c.JSON(http.StatusOK, taskdto.ToTaskDTO(*task))
 }
 
 func (h *TaskHandler) Create(c *gin.Context) {
-	var input dto.CreateTaskDTO
+	var input taskdto.CreateTaskDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	newTask := dto.ToTask(input)
+	existingTask, _ := h.service.GetByTitle(input.Title)
+	if existingTask != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Task with this title already exists"})
+		return
+	}
+
+	newTask := taskdto.ToTask(input)
 	created := h.service.Create(newTask)
-	response := dto.ToTaskDTO(created)
+	response := taskdto.ToTaskDTO(created)
 
 	c.JSON(http.StatusCreated, response)
 }
