@@ -2,13 +2,26 @@ package task
 
 import "github.com/google/uuid"
 
-type Status string
+type Status int
 
 const (
-	StatusNew        Status = "Новая"
-	StatusInProgress Status = "В процессе"
-	StatusDone       Status = "Завершена"
+	StatusNew Status = iota
+	StatusInProgress
+	StatusDone
 )
+
+func (s Status) String() string {
+	switch s {
+	case StatusNew:
+		return "Новая"
+	case StatusInProgress:
+		return "В процессе"
+	case StatusDone:
+		return "Завершена"
+	default:
+		return "Неизвестно"
+	}
+}
 
 type Task struct {
 	id          uuid.UUID `json:"id"`
@@ -18,7 +31,7 @@ type Task struct {
 }
 
 func NewTask(title, description string, status Status) Task {
-	if status == "" {
+	if status == 0 {
 		status = StatusNew
 	}
 	return Task{

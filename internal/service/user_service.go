@@ -2,15 +2,23 @@ package service
 
 import (
 	"ToDo/internal/domain/user"
-	"ToDo/internal/repository"
 	"github.com/google/uuid"
 )
 
-type UserService struct {
-	repo *repository.UserRepository
+type UserRepositoryInterface interface {
+	GetByEmail(email string) (*user.User, error)
+	GetAll() ([]user.User, error)
+	GetById(id uuid.UUID) (*user.User, error)
+	Create(u user.User) (user.User, error)
+	Update(id uuid.UUID, updated user.User) (*user.User, error)
+	Delete(id uuid.UUID) error
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
+type UserService struct {
+	repo UserRepositoryInterface
+}
+
+func NewUserService(repo UserRepositoryInterface) *UserService {
 	return &UserService{repo: repo}
 }
 
@@ -18,7 +26,7 @@ func (s *UserService) GetByEmail(email string) (*user.User, error) {
 	return s.repo.GetByEmail(email)
 }
 
-func (s *UserService) GetAll() []user.User {
+func (s *UserService) GetAll() ([]user.User, error) {
 	return s.repo.GetAll()
 }
 
@@ -26,8 +34,12 @@ func (s *UserService) GetById(id uuid.UUID) (*user.User, error) {
 	return s.repo.GetById(id)
 }
 
-func (s *UserService) Create(u user.User) user.User {
-	return s.repo.Create(u)
+func (s *UserService) Create(u user.User) (user.User, error) {
+	createdUser, err := s.repo.Create(u)
+	if err != nil {
+		return user.User{}, err
+	}
+	return createdUser, nil
 }
 
 func (s *UserService) Update(id uuid.UUID, updated user.User) (*user.User, error) {

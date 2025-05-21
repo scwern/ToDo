@@ -6,7 +6,7 @@ import (
 
 func ToTask(dto CreateTaskDTO) task.Task {
 	status := task.Status(dto.Status)
-	if status == "" {
+	if status == 0 {
 		status = task.StatusNew
 	}
 
@@ -18,6 +18,6 @@ func ToTaskDTO(t task.Task) DTO {
 		ID:          t.ID().String(),
 		Title:       t.Title(),
 		Description: t.Description(),
-		Status:      string(t.Status()),
+		Status:      int(t.Status()),
 	}
 }
