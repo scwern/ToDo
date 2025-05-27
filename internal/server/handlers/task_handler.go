@@ -3,7 +3,6 @@ package handlers
 import (
 	taskdto "ToDo/internal/dto/task"
 	"ToDo/internal/service"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
@@ -18,7 +17,19 @@ func NewTaskHandler(service *service.TaskService) *TaskHandler {
 }
 
 func (h *TaskHandler) GetAll(c *gin.Context) {
-	tasks, err := h.service.GetAll()
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing user_id cookie"})
+		return
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id UUID"})
+		return
+	}
+
+	tasks, err := h.service.GetAll(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -33,42 +44,60 @@ func (h *TaskHandler) GetAll(c *gin.Context) {
 }
 
 func (h *TaskHandler) GetByID(c *gin.Context) {
-	idStr := c.Param("id")
-	fmt.Println("Received ID:", idStr)
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing user_id cookie"})
+		return
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id UUID"})
+		return
+	}
 
+	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
 
-	fmt.Println("Parsed ID:", id)
-
-	task, err := h.service.GetById(id)
+	task, err := h.service.GetById(userID, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}
 
-	fmt.Println("Found task:", task)
-
 	c.JSON(http.StatusOK, taskdto.ToTaskDTO(*task))
 }
 
 func (h *TaskHandler) Create(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing user_id cookie"})
+		return
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id UUID"})
+		return
+	}
+
 	var input taskdto.CreateTaskDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	existingTask, _ := h.service.GetByTitle(input.Title)
+	existingTask, _ := h.service.GetByTitle(userID, input.Title)
 	if existingTask != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Task with this title already exists"})
 		return
 	}
 
 	newTask := taskdto.ToTask(input)
+	newTask.SetUserID(userID)
+
 	created, err := h.service.Create(newTask)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

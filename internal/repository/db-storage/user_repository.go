@@ -81,7 +81,7 @@ func (r *UserRepository) GetAll() ([]user.User, error) {
 func (r *UserRepository) GetById(id uuid.UUID) (*user.User, error) {
 	var u user.User
 
-	query := `SELECT uid, name, email, password FROM users WHERE id = $1`
+	query := `SELECT uid, name, email, password FROM users WHERE uid = $1`
 	row := r.db.QueryRow(context.Background(), query, id)
 
 	var uid uuid.UUID

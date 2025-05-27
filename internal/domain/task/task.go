@@ -28,6 +28,7 @@ type Task struct {
 	title       string    `json:"title"`
 	description string    `json:"description"`
 	status      Status    `json:"status"`
+	userID      uuid.UUID `json:"userID"`
 }
 
 func NewTask(title, description string, status Status) Task {
@@ -58,6 +59,10 @@ func (t *Task) Status() Status {
 	return t.status
 }
 
+func (t *Task) UserID() uuid.UUID {
+	return t.userID
+}
+
 func (t *Task) SetTitle(title string) {
 	t.title = title
 }
@@ -72,4 +77,8 @@ func (t *Task) SetStatus(status Status) {
 
 func (t *Task) SetID(id uuid.UUID) {
 	t.id = id
+}
+
+func (t *Task) SetUserID(id uuid.UUID) {
+	t.userID = id
 }
