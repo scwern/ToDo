@@ -7,14 +7,26 @@ import (
 	"ToDo/internal/server/handlers"
 	"ToDo/internal/service"
 	"context"
+	"fmt"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"log"
+	"os"
 )
 
 func main() {
 	ctx := context.Background()
-	dbURL := "postgres://user:password@localhost:5432/todo_db?sslmode=disable"
+	log.Println("Starting application...")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		dbUser, dbPassword, dbHost, dbPort, dbName,
+	)
+	log.Printf("Connecting to DB with URL: %s", dbURL)
 
 	if err := dbstorage.ApplyMigrations(dbURL, "file://migrations"); err != nil {
 		log.Printf("Migration failed: %v", err)
