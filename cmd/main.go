@@ -1,7 +1,7 @@
 package main
 
 import (
-	dbstorage "ToDo/internal/repository/db-storage"
+	"ToDo/internal/repository/dbstorage"
 	inmemory "ToDo/internal/repository/in-memory"
 	"ToDo/internal/server"
 	"ToDo/internal/server/handlers"
