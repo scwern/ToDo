@@ -19,5 +19,6 @@ func ToTaskDTO(t task.Task) DTO {
 		Title:       t.Title(),
 		Description: t.Description(),
 		Status:      int(t.Status()),
+		UserID:      t.UserID(),
 	}
 }

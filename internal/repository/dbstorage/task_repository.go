@@ -1,4 +1,4 @@
-package db_storage
+package dbstorage
 
 import (
 	"ToDo/internal/domain/task"
@@ -18,23 +18,23 @@ func NewTaskRepository(db *pgx.Conn) *TaskRepository {
 }
 
 func (r *TaskRepository) Create(t task.Task) (task.Task, error) {
-	query := `INSERT INTO tasks (uid, title, description, status) VALUES ($1, $2, $3, $4)`
+	query := `INSERT INTO tasks (uid, user_id, title, description, status) VALUES ($1, $2, $3, $4, $5)`
 	_, err := r.db.Exec(context.Background(), query,
-		t.ID(), t.Title(), t.Description(), int(t.Status()))
+		t.ID(), t.UserID(), t.Title(), t.Description(), int(t.Status()))
 	if err != nil {
 		return task.Task{}, fmt.Errorf("failed to insert task: %w", err)
 	}
 	return t, nil
 }
 
-func (r *TaskRepository) GetByTitle(title string) (*task.Task, error) {
-	query := `SELECT uid, title, description, status FROM tasks WHERE title = $1 LIMIT 1`
-	row := r.db.QueryRow(context.Background(), query, title)
+func (r *TaskRepository) GetByTitle(userID uuid.UUID, title string) (*task.Task, error) {
+	query := `SELECT uid, user_id, title, description, status FROM tasks WHERE user_id = $1 AND title = $2 LIMIT 1`
+	row := r.db.QueryRow(context.Background(), query, userID, title)
 
-	var tid uuid.UUID
+	var tid, uidUserID uuid.UUID
 	var titleDB, description string
 	var status int
-	err := row.Scan(&tid, &titleDB, &description, &status)
+	err := row.Scan(&tid, &uidUserID, &titleDB, &description, &status)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("task not found: %w", err)
@@ -44,13 +44,14 @@ func (r *TaskRepository) GetByTitle(title string) (*task.Task, error) {
 
 	t := task.NewTask(titleDB, description, task.Status(status))
 	t.SetID(tid)
+	t.SetUserID(uidUserID)
 
 	return &t, nil
 }
 
-func (r *TaskRepository) GetAll() ([]task.Task, error) {
-	query := `SELECT uid, title, description, status FROM tasks`
-	rows, err := r.db.Query(context.Background(), query)
+func (r *TaskRepository) GetAll(userID uuid.UUID) ([]task.Task, error) {
+	query := `SELECT uid, user_id, title, description, status FROM tasks WHERE user_id = $1`
+	rows, err := r.db.Query(context.Background(), query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query tasks: %w", err)
 	}
@@ -58,17 +59,18 @@ func (r *TaskRepository) GetAll() ([]task.Task, error) {
 
 	var tasks []task.Task
 	for rows.Next() {
-		var tid uuid.UUID
+		var tid, uidUserID uuid.UUID
 		var title, description string
 		var status int
 
-		err := rows.Scan(&tid, &title, &description, &status)
+		err := rows.Scan(&tid, &uidUserID, &title, &description, &status)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan task row: %w", err)
 		}
 
 		t := task.NewTask(title, description, task.Status(status))
 		t.SetID(tid)
+		t.SetUserID(uidUserID)
 		tasks = append(tasks, t)
 	}
 
@@ -79,25 +81,24 @@ func (r *TaskRepository) GetAll() ([]task.Task, error) {
 	return tasks, nil
 }
 
-func (r *TaskRepository) GetById(id uuid.UUID) (*task.Task, error) {
-	var t task.Task
-	var status int
+func (r *TaskRepository) GetById(userID, id uuid.UUID) (*task.Task, error) {
+	query := `SELECT uid, user_id, title, description, status FROM tasks WHERE uid = $1 AND user_id = $2`
+	row := r.db.QueryRow(context.Background(), query, id, userID)
 
-	query := `SELECT uid, title, description, status FROM tasks WHERE uid = $1`
-	row := r.db.QueryRow(context.Background(), query, id)
-
-	var tid uuid.UUID
+	var tid, uidUserID uuid.UUID
 	var title, description string
-	err := row.Scan(&tid, &title, &description, &status)
+	var status int
+	err := row.Scan(&tid, &uidUserID, &title, &description, &status)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return &t, fmt.Errorf("task not found: %w", err)
+			return nil, fmt.Errorf("task not found: %w", err)
 		}
-		return &t, fmt.Errorf("failed to get task: %w", err)
+		return nil, fmt.Errorf("failed to get task: %w", err)
 	}
 
-	t = task.NewTask(title, description, task.Status(status))
+	t := task.NewTask(title, description, task.Status(status))
 	t.SetID(tid)
+	t.SetUserID(uidUserID)
 
 	return &t, nil
 }

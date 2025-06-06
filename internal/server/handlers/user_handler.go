@@ -75,7 +75,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	c.SetCookie("user_id", created.ID().String(), 3600*24, "/", "localhost", false, true)
 	response := userdto.ToUserDTO(created)
 	c.JSON(http.StatusCreated, response)
 }

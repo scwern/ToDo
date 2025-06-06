@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ToDo/internal/repository/db-storage"
+	"ToDo/internal/repository/dbstorage"
 	inmemory "ToDo/internal/repository/in-memory"
 	"ToDo/internal/server"
 	"ToDo/internal/server/handlers"
@@ -16,11 +16,11 @@ func main() {
 	ctx := context.Background()
 	dbURL := "postgres://user:password@localhost:5432/todo_db?sslmode=disable"
 
-	if err := db_storage.ApplyMigrations(dbURL, "file://migrations"); err != nil {
+	if err := dbstorage.ApplyMigrations(dbURL, "file://migrations"); err != nil {
 		log.Printf("Migration failed: %v", err)
 	}
 
-	db, err := db_storage.New(ctx, dbURL)
+	db, err := dbstorage.New(ctx, dbURL)
 
 	var taskRepo service.TaskRepositoryInterface
 	var userRepo service.UserRepositoryInterface
