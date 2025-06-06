@@ -7,9 +7,9 @@ import (
 )
 
 type TaskRepositoryInterface interface {
-	GetAll() []task.Task
+	GetAll() ([]task.Task, error)
 	GetById(id uuid.UUID) (*task.Task, error)
-	Create(t task.Task) task.Task
+	Create(t task.Task) (task.Task, error)
 	Update(id uuid.UUID, updated task.Task) (*task.Task, error)
 	Delete(id uuid.UUID) error
 	GetByTitle(title string) (*task.Task, error)
@@ -23,7 +23,7 @@ func NewTaskService(repo TaskRepositoryInterface) *TaskService {
 	return &TaskService{repo: repo}
 }
 
-func (s *TaskService) GetAll() []task.Task {
+func (s *TaskService) GetAll() ([]task.Task, error) {
 	return s.repo.GetAll()
 }
 
@@ -42,13 +42,18 @@ func (s *TaskService) GetById(id uuid.UUID) (*task.Task, error) {
 	return task, nil
 }
 
-func (s *TaskService) Create(t task.Task) task.Task {
+func (s *TaskService) Create(t task.Task) (task.Task, error) {
 	fmt.Printf("Task received in service: %+v\n", t)
-	return s.repo.Create(t)
+	createdTask, err := s.repo.Create(t)
+	if err != nil {
+		fmt.Println("Error creating task:", err)
+		return task.Task{}, err
+	}
+	return createdTask, nil
 }
 
 func (s *TaskService) Update(id uuid.UUID, updated task.Task) (*task.Task, error) {
-	if updated.Status() == "" {
+	if updated.Status() == 0 {
 		updated.SetStatus(task.StatusNew)
 	}
 	return s.repo.Update(id, updated)

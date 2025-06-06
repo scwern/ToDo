@@ -19,7 +19,11 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) GetAll(c *gin.Context) {
-	users := h.service.GetAll()
+	users, err := h.service.GetAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	var userDTOs []userdto.DTO
 	for _, u := range users {
@@ -66,9 +70,13 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	newUser := userdto.ToUser(input)
-	created := h.service.Create(newUser)
-	response := userdto.ToUserDTO(created)
+	created, err := h.service.Create(newUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
+	response := userdto.ToUserDTO(created)
 	c.JSON(http.StatusCreated, response)
 }
 

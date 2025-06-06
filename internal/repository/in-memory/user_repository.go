@@ -1,4 +1,4 @@
-package repository
+package in_memory
 
 import (
 	"ToDo/internal/domain/user"
@@ -26,12 +26,12 @@ func (r *UserRepository) GetByEmail(email string) (*user.User, error) {
 	return nil, errors.New("user not found")
 }
 
-func (r *UserRepository) GetAll() []user.User {
-	var result []user.User
+func (r *UserRepository) GetAll() ([]user.User, error) {
+	result := make([]user.User, 0, len(r.users))
 	for _, u := range r.users {
 		result = append(result, u)
 	}
-	return result
+	return result, nil
 }
 
 func (r *UserRepository) GetById(id uuid.UUID) (*user.User, error) {
@@ -41,10 +41,13 @@ func (r *UserRepository) GetById(id uuid.UUID) (*user.User, error) {
 	return nil, errors.New("user not found")
 }
 
-func (r *UserRepository) Create(u user.User) user.User {
+func (r *UserRepository) Create(u user.User) (user.User, error) {
 	fmt.Println("Adding user to repository:", u)
+	if u.ID() == uuid.Nil {
+		u.SetID(uuid.New())
+	}
 	r.users[u.ID()] = u
-	return u
+	return u, nil
 }
 
 func (r *UserRepository) Update(id uuid.UUID, updated user.User) (*user.User, error) {

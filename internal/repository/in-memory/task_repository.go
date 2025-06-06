@@ -1,4 +1,4 @@
-package repository
+package in_memory
 
 import (
 	"ToDo/internal/domain/task"
@@ -26,12 +26,12 @@ func (r *TaskRepository) GetByTitle(title string) (*task.Task, error) {
 	return nil, errors.New("task with this title not found")
 }
 
-func (r *TaskRepository) GetAll() []task.Task {
+func (r *TaskRepository) GetAll() ([]task.Task, error) {
 	result := make([]task.Task, 0, len(r.tasks))
 	for _, t := range r.tasks {
 		result = append(result, t)
 	}
-	return result
+	return result, nil
 }
 
 func (r *TaskRepository) GetById(id uuid.UUID) (*task.Task, error) {
@@ -42,11 +42,11 @@ func (r *TaskRepository) GetById(id uuid.UUID) (*task.Task, error) {
 	return &t, nil
 }
 
-func (r *TaskRepository) Create(t task.Task) task.Task {
+func (r *TaskRepository) Create(t task.Task) (task.Task, error) {
 	fmt.Printf("Task being saved: %+v\n", t)
 	t.SetID(uuid.New())
 	r.tasks[t.ID()] = t
-	return t
+	return t, nil
 }
 
 func (r *TaskRepository) Update(id uuid.UUID, updated task.Task) (*task.Task, error) {

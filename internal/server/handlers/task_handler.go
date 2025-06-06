@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"ToDo/internal/domain/task"
 	taskdto "ToDo/internal/dto/task"
 	"ToDo/internal/service"
 	"fmt"
@@ -19,7 +18,11 @@ func NewTaskHandler(service *service.TaskService) *TaskHandler {
 }
 
 func (h *TaskHandler) GetAll(c *gin.Context) {
-	tasks := h.service.GetAll()
+	tasks, err := h.service.GetAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	var taskDTOs []taskdto.DTO
 	for _, t := range tasks {
@@ -66,7 +69,11 @@ func (h *TaskHandler) Create(c *gin.Context) {
 	}
 
 	newTask := taskdto.ToTask(input)
-	created := h.service.Create(newTask)
+	created, err := h.service.Create(newTask)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	response := taskdto.ToTaskDTO(created)
 
 	c.JSON(http.StatusCreated, response)
@@ -80,19 +87,20 @@ func (h *TaskHandler) Update(c *gin.Context) {
 		return
 	}
 
-	var t task.Task
-	if err := c.ShouldBindJSON(&t); err != nil {
+	var input taskdto.CreateTaskDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	updated, err := h.service.Update(id, t)
+	updatedTask := taskdto.ToTask(input)
+	updated, err := h.service.Update(id, updatedTask)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, updated)
+	c.JSON(http.StatusOK, taskdto.ToTaskDTO(*updated))
 }
 
 func (h *TaskHandler) Delete(c *gin.Context) {
