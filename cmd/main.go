@@ -1,31 +1,25 @@
 package main
 
 import (
+	"ToDo/internal/config"
 	"ToDo/internal/repository/dbstorage"
 	inmemory "ToDo/internal/repository/in-memory"
 	"ToDo/internal/server"
 	"ToDo/internal/server/handlers"
 	"ToDo/internal/service"
 	"context"
-	"fmt"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"log"
-	"os"
 )
 
 func main() {
 	ctx := context.Background()
 	log.Println("Starting application...")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
 
-	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		dbUser, dbPassword, dbHost, dbPort, dbName,
-	)
+	cfg := config.Load()
+
+	dbURL := cfg.DBURL()
 	log.Printf("Connecting to DB with URL: %s", dbURL)
 
 	if err := dbstorage.ApplyMigrations(dbURL, "file://migrations"); err != nil {
@@ -55,7 +49,7 @@ func main() {
 
 	router := server.NewRouter(taskHandler, userHandler)
 
-	if err := router.Run(":8080"); err != nil {
+	if err := router.Run(cfg.HTTPAddr()); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
