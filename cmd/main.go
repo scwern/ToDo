@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ToDo/internal/config"
 	"ToDo/internal/repository/dbstorage"
 	inmemory "ToDo/internal/repository/in-memory"
 	"ToDo/internal/server"
@@ -14,7 +15,12 @@ import (
 
 func main() {
 	ctx := context.Background()
-	dbURL := "postgres://user:password@localhost:5432/todo_db?sslmode=disable"
+	log.Println("Starting application...")
+
+	cfg := config.Load()
+
+	dbURL := cfg.DBURL()
+	log.Printf("Connecting to DB with URL: %s", dbURL)
 
 	if err := dbstorage.ApplyMigrations(dbURL, "file://migrations"); err != nil {
 		log.Printf("Migration failed: %v", err)
@@ -43,7 +49,7 @@ func main() {
 
 	router := server.NewRouter(taskHandler, userHandler)
 
-	if err := router.Run(":8080"); err != nil {
+	if err := router.Run(cfg.HTTPAddr()); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
