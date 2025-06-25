@@ -1,14 +1,18 @@
 package server
 
 import (
+	"ToDo/internal/middleware"
 	"ToDo/internal/server/handlers"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
 
 func NewRouter(taskHandler *handlers.TaskHandler, userHandler *handlers.UserHandler) *gin.Engine {
 	r := gin.Default()
-
 	r.Use(gin.Logger())
+
+	r.Use(gzip.Gzip(gzip.BestSpeed))
+	r.Use(middleware.GzipRequestMiddleware())
 
 	tasks := r.Group("/tasks")
 	{
