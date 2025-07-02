@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgx/v5"
+	"log"
 )
 
 type DBStorage struct {
@@ -13,6 +14,7 @@ type DBStorage struct {
 }
 
 func New(ctx context.Context, addr string) (*DBStorage, error) {
+	log.Printf("Connecting to DB with URL: %s", addr)
 	conn, err := pgx.Connect(ctx, addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
@@ -22,7 +24,18 @@ func New(ctx context.Context, addr string) (*DBStorage, error) {
 }
 
 func (db *DBStorage) Close(ctx context.Context) error {
+	if db.TaskRepository() != nil {
+		db.TaskRepository().Close()
+	}
 	return db.db.Close(ctx)
+}
+
+func (db *DBStorage) TaskRepository() *TaskRepository {
+	return NewTaskRepository(db.db)
+}
+
+func (db *DBStorage) UserRepository() *UserRepository {
+	return NewUserRepository(db.db)
 }
 
 func ApplyMigrations(addr, migrationPath string) error {
@@ -43,12 +56,4 @@ func ApplyMigrations(addr, migrationPath string) error {
 
 	fmt.Println("Migrations applied successfully")
 	return nil
-}
-
-func (db *DBStorage) TaskRepository() *TaskRepository {
-	return NewTaskRepository(db.db)
-}
-
-func (db *DBStorage) UserRepository() *UserRepository {
-	return NewUserRepository(db.db)
 }

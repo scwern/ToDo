@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS tasks(
     status INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     user_id VARCHAR(36) NULL,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY(user_id) REFERENCES users(uid),
     unique(title)
     );

@@ -2,7 +2,6 @@ package service
 
 import (
 	"ToDo/internal/domain/task"
-	"fmt"
 	"github.com/google/uuid"
 )
 
@@ -11,7 +10,7 @@ type TaskRepositoryInterface interface {
 	GetById(userID, id uuid.UUID) (*task.Task, error)
 	Create(t task.Task) (task.Task, error)
 	Update(id uuid.UUID, updated task.Task) (*task.Task, error)
-	Delete(id uuid.UUID) error
+	MarkDeleted(id uuid.UUID) error
 	GetByTitle(userID uuid.UUID, title string) (*task.Task, error)
 }
 
@@ -32,7 +31,6 @@ func (s *TaskService) GetById(userID, id uuid.UUID) (*task.Task, error) {
 }
 
 func (s *TaskService) Create(t task.Task) (task.Task, error) {
-	fmt.Println("В сервисе userID:", t.UserID())
 	return s.repo.Create(t)
 }
 
@@ -41,7 +39,7 @@ func (s *TaskService) Update(id uuid.UUID, updated task.Task) (*task.Task, error
 }
 
 func (s *TaskService) Delete(id uuid.UUID) error {
-	return s.repo.Delete(id)
+	return s.repo.MarkDeleted(id)
 }
 
 func (s *TaskService) GetByTitle(userID uuid.UUID, title string) (*task.Task, error) {
