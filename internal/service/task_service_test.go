@@ -50,7 +50,7 @@ func createTestTask() task.Task {
 	return t
 }
 
-func TestTaskService_GetAll(t *testing.T) {
+func TestTaskServiceGetAll(t *testing.T) {
 	repo := new(MockTaskRepository)
 	service := NewTaskService(repo)
 	userID := uuid.New()
@@ -65,7 +65,7 @@ func TestTaskService_GetAll(t *testing.T) {
 	assert.Equal(t, expectedTasks, tasks)
 }
 
-func TestTaskService_GetAll_Error(t *testing.T) {
+func TestTaskServiceGetAllError(t *testing.T) {
 	repo := new(MockTaskRepository)
 	service := NewTaskService(repo)
 	userID := uuid.New()
@@ -74,7 +74,7 @@ func TestTaskService_GetAll_Error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestTaskService_GetById(t *testing.T) {
+func TestTaskServiceGetById(t *testing.T) {
 	repo := new(MockTaskRepository)
 	service := NewTaskService(repo)
 	userID := uuid.New()
@@ -89,7 +89,7 @@ func TestTaskService_GetById(t *testing.T) {
 	assert.Equal(t, &expectedTask, result)
 }
 
-func TestTaskService_Create(t *testing.T) {
+func TestTaskServiceCreate(t *testing.T) {
 	repo := new(MockTaskRepository)
 	service := NewTaskService(repo)
 
@@ -103,7 +103,7 @@ func TestTaskService_Create(t *testing.T) {
 	assert.Equal(t, createdTask, result)
 }
 
-func TestTaskService_Update(t *testing.T) {
+func TestTaskServiceUpdate(t *testing.T) {
 	repo := new(MockTaskRepository)
 	service := NewTaskService(repo)
 	taskID := uuid.New()
@@ -118,7 +118,7 @@ func TestTaskService_Update(t *testing.T) {
 	assert.Equal(t, &updatedTask, result)
 }
 
-func TestTaskService_Delete(t *testing.T) {
+func TestTaskServiceDelete(t *testing.T) {
 	repo := new(MockTaskRepository)
 	service := NewTaskService(repo)
 	taskID := uuid.New()

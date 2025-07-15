@@ -50,7 +50,7 @@ func createTestUser() user.User {
 	return u
 }
 
-func TestUserService_GetByEmail(t *testing.T) {
+func TestUserServiceGetByEmail(t *testing.T) {
 	repo := new(MockUserRepository)
 	service := NewUserService(repo)
 
@@ -62,7 +62,7 @@ func TestUserService_GetByEmail(t *testing.T) {
 	assert.Equal(t, &expectedUser, result)
 }
 
-func TestUserService_GetByEmail_Error(t *testing.T) {
+func TestUserServiceGetByEmailError(t *testing.T) {
 	repo := new(MockUserRepository)
 	service := NewUserService(repo)
 	email := "error@test.com"
@@ -71,7 +71,7 @@ func TestUserService_GetByEmail_Error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestUserService_GetAll(t *testing.T) {
+func TestUserServiceGetAll(t *testing.T) {
 	repo := new(MockUserRepository)
 	service := NewUserService(repo)
 
@@ -85,7 +85,7 @@ func TestUserService_GetAll(t *testing.T) {
 	assert.Equal(t, expectedUsers, users)
 }
 
-func TestUserService_GetById(t *testing.T) {
+func TestUserServiceGetById(t *testing.T) {
 	repo := new(MockUserRepository)
 	service := NewUserService(repo)
 
@@ -97,7 +97,7 @@ func TestUserService_GetById(t *testing.T) {
 	assert.Equal(t, &expectedUser, result)
 }
 
-func TestUserService_Create(t *testing.T) {
+func TestUserServiceCreate(t *testing.T) {
 	repo := new(MockUserRepository)
 	service := NewUserService(repo)
 
@@ -111,7 +111,7 @@ func TestUserService_Create(t *testing.T) {
 	assert.Equal(t, createdUser, result)
 }
 
-func TestUserService_Create_Error(t *testing.T) {
+func TestUserServiceCreateError(t *testing.T) {
 	repo := new(MockUserRepository)
 	service := NewUserService(repo)
 
@@ -122,7 +122,7 @@ func TestUserService_Create_Error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestUserService_Update(t *testing.T) {
+func TestUserServiceUpdate(t *testing.T) {
 	repo := new(MockUserRepository)
 	service := NewUserService(repo)
 
