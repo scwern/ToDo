@@ -8,15 +8,20 @@ import (
 	"ToDo/internal/server/handlers"
 	"ToDo/internal/service"
 	"context"
+	"errors"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
 	ctx := context.Background()
 	log.Println("Starting application...")
-
 	cfg := config.Load()
 
 	dbURL := cfg.DBURL()
@@ -36,7 +41,11 @@ func main() {
 		taskRepo = inmemory.NewTaskRepository()
 		userRepo = inmemory.NewUserRepository()
 	} else {
-		defer db.Close(ctx)
+		defer func() {
+			if err := db.Close(ctx); err != nil {
+				log.Printf("Failed to close DB: %v", err)
+			}
+		}()
 		taskRepo = db.TaskRepository()
 		userRepo = db.UserRepository()
 	}
@@ -49,7 +58,29 @@ func main() {
 
 	router := server.NewRouter(taskHandler, userHandler)
 
-	if err := router.Run(cfg.HTTPAddr()); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	srv := &http.Server{
+		Addr:    cfg.HTTPAddr(),
+		Handler: router,
 	}
+
+	go func() {
+		log.Printf("Server is running on %s", cfg.HTTPAddr())
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Server failed: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Server Shutdown Failed: %v", err)
+	}
+
+	log.Println("Server exited properly")
 }
