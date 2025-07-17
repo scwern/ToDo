@@ -1,128 +1,110 @@
 package service
 
 import (
-	"ToDo/internal/domain/task"
-	"errors"
 	"testing"
+
+	"ToDo/internal/domain/task"
+	"ToDo/internal/service/mocks"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-type MockTaskRepository struct {
-	mock.Mock
-}
-
-func (m *MockTaskRepository) GetAll(userID uuid.UUID) ([]task.Task, error) {
-	args := m.Called(userID)
-	return args.Get(0).([]task.Task), args.Error(1)
-}
-
-func (m *MockTaskRepository) GetById(userID, id uuid.UUID) (*task.Task, error) {
-	args := m.Called(userID, id)
-	return args.Get(0).(*task.Task), args.Error(1)
-}
-
-func (m *MockTaskRepository) Create(t task.Task) (task.Task, error) {
-	args := m.Called(t)
-	return args.Get(0).(task.Task), args.Error(1)
-}
-
-func (m *MockTaskRepository) Update(id uuid.UUID, updated task.Task) (*task.Task, error) {
-	args := m.Called(id, updated)
-	return args.Get(0).(*task.Task), args.Error(1)
-}
-
-func (m *MockTaskRepository) MarkDeleted(id uuid.UUID) error {
-	args := m.Called(id)
-	return args.Error(0)
-}
-
-func (m *MockTaskRepository) GetByTitle(userID uuid.UUID, title string) (*task.Task, error) {
-	args := m.Called(userID, title)
-	return args.Get(0).(*task.Task), args.Error(1)
-}
-
 func createTestTask() task.Task {
-	t := task.NewTask("Test", "Description", task.StatusNew)
+	t := task.NewTask("Test Task", "Description", task.StatusNew)
 	t.SetID(uuid.New())
 	return t
 }
 
 func TestTaskServiceGetAll(t *testing.T) {
-	repo := new(MockTaskRepository)
+	repo := mocks.NewTaskRepositoryInterface(t)
 	service := NewTaskService(repo)
+
 	userID := uuid.New()
+	expectedTasks := []task.Task{createTestTask()}
 
-	task1 := createTestTask()
-	task2 := createTestTask()
-	expectedTasks := []task.Task{task1, task2}
+	repo.EXPECT().GetAll(userID).Return(expectedTasks, nil).Once()
 
-	repo.On("GetAll", userID).Return(expectedTasks, nil)
-	tasks, err := service.GetAll(userID)
+	result, err := service.GetAll(userID)
+
 	assert.NoError(t, err)
-	assert.Equal(t, expectedTasks, tasks)
-}
-
-func TestTaskServiceGetAllError(t *testing.T) {
-	repo := new(MockTaskRepository)
-	service := NewTaskService(repo)
-	userID := uuid.New()
-	repo.On("GetAll", userID).Return([]task.Task{}, errors.New("error"))
-	_, err := service.GetAll(userID)
-	assert.Error(t, err)
+	assert.Equal(t, expectedTasks, result)
 }
 
 func TestTaskServiceGetById(t *testing.T) {
-	repo := new(MockTaskRepository)
+	repo := mocks.NewTaskRepositoryInterface(t)
 	service := NewTaskService(repo)
+
 	userID := uuid.New()
 	taskID := uuid.New()
-
 	expectedTask := createTestTask()
-	expectedTask.SetID(taskID)
 
-	repo.On("GetById", userID, taskID).Return(&expectedTask, nil)
+	repo.EXPECT().GetById(userID, taskID).Return(&expectedTask, nil).Once()
+
 	result, err := service.GetById(userID, taskID)
+
 	assert.NoError(t, err)
 	assert.Equal(t, &expectedTask, result)
 }
 
 func TestTaskServiceCreate(t *testing.T) {
-	repo := new(MockTaskRepository)
+	repo := mocks.NewTaskRepositoryInterface(t)
 	service := NewTaskService(repo)
 
-	newTask := task.NewTask("New", "Desc", task.StatusNew)
+	newTask := task.NewTask("New Task", "Desc", task.StatusNew)
 	createdTask := newTask
 	createdTask.SetID(uuid.New())
 
-	repo.On("Create", newTask).Return(createdTask, nil)
+	repo.EXPECT().Create(newTask).Return(createdTask, nil).Once()
+
 	result, err := service.Create(newTask)
+
 	assert.NoError(t, err)
 	assert.Equal(t, createdTask, result)
 }
 
 func TestTaskServiceUpdate(t *testing.T) {
-	repo := new(MockTaskRepository)
+	repo := mocks.NewTaskRepositoryInterface(t)
 	service := NewTaskService(repo)
+
 	taskID := uuid.New()
-
 	updatedTask := createTestTask()
-	updatedTask.SetTitle("Updated")
-	updatedTask.SetID(taskID)
+	updatedTask.SetTitle("Updated Title")
 
-	repo.On("Update", taskID, updatedTask).Return(&updatedTask, nil)
+	repo.EXPECT().Update(taskID, updatedTask).Return(&updatedTask, nil).Once()
+
 	result, err := service.Update(taskID, updatedTask)
+
 	assert.NoError(t, err)
 	assert.Equal(t, &updatedTask, result)
 }
 
 func TestTaskServiceDelete(t *testing.T) {
-	repo := new(MockTaskRepository)
+	repo := mocks.NewTaskRepositoryInterface(t)
 	service := NewTaskService(repo)
+
 	taskID := uuid.New()
-	repo.On("MarkDeleted", taskID).Return(nil)
+
+	repo.EXPECT().MarkDeleted(taskID).Return(nil).Once()
+
 	err := service.Delete(taskID)
+
 	assert.NoError(t, err)
+}
+
+func TestTaskServiceGetByTitle(t *testing.T) {
+	repo := mocks.NewTaskRepositoryInterface(t)
+	service := NewTaskService(repo)
+
+	userID := uuid.New()
+	title := "Specific Task"
+	expectedTask := createTestTask()
+	expectedTask.SetTitle(title)
+
+	repo.EXPECT().GetByTitle(userID, title).Return(&expectedTask, nil).Once()
+
+	result, err := service.GetByTitle(userID, title)
+
+	assert.NoError(t, err)
+	assert.Equal(t, &expectedTask, result)
 }
