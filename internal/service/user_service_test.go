@@ -1,12 +1,11 @@
 package service
 
 import (
+	"ToDo/internal/mocks"
 	"github.com/google/uuid"
 	"testing"
 
 	"ToDo/internal/domain/user"
-	"ToDo/internal/service/mocks"
-
 	_ "github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )

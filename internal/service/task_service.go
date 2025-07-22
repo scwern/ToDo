@@ -15,33 +15,33 @@ type TaskRepositoryInterface interface {
 }
 
 type TaskService struct {
-	repo TaskRepositoryInterface
+	Repo TaskRepositoryInterface
 }
 
 func NewTaskService(repo TaskRepositoryInterface) *TaskService {
-	return &TaskService{repo: repo}
+	return &TaskService{Repo: repo}
 }
 
 func (s *TaskService) GetAll(userID uuid.UUID) ([]task.Task, error) {
-	return s.repo.GetAll(userID)
+	return s.Repo.GetAll(userID)
 }
 
 func (s *TaskService) GetById(userID, id uuid.UUID) (*task.Task, error) {
-	return s.repo.GetById(userID, id)
+	return s.Repo.GetById(userID, id)
 }
 
 func (s *TaskService) Create(t task.Task) (task.Task, error) {
-	return s.repo.Create(t)
+	return s.Repo.Create(t)
 }
 
 func (s *TaskService) Update(id uuid.UUID, updated task.Task) (*task.Task, error) {
-	return s.repo.Update(id, updated)
+	return s.Repo.Update(id, updated)
 }
 
 func (s *TaskService) Delete(id uuid.UUID) error {
-	return s.repo.MarkDeleted(id)
+	return s.Repo.MarkDeleted(id)
 }
 
 func (s *TaskService) GetByTitle(userID uuid.UUID, title string) (*task.Task, error) {
-	return s.repo.GetByTitle(userID, title)
+	return s.Repo.GetByTitle(userID, title)
 }
