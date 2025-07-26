@@ -24,12 +24,12 @@ func (s Status) String() string {
 }
 
 type Task struct {
-	id          uuid.UUID `json:"id"`
-	title       string    `json:"title"`
-	description string    `json:"description"`
-	status      Status    `json:"status"`
-	userID      uuid.UUID `json:"userID"`
-	deleted     bool      `json:"-"`
+	id          uuid.UUID
+	title       string
+	description string
+	status      Status
+	userID      uuid.UUID
+	deleted     bool
 }
 
 func NewTask(title, description string, status Status) Task {

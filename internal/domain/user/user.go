@@ -3,10 +3,10 @@ package user
 import "github.com/google/uuid"
 
 type User struct {
-	id       uuid.UUID `json:"id"`
-	name     string    `json:"name"`
-	email    string    `json:"email"`
-	password string    `json:"password"`
+	id       uuid.UUID
+	name     string
+	email    string
+	password string
 }
 
 func NewUser(name, email, password string) User {

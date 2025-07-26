@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"compress/gzip"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -17,7 +18,11 @@ func GzipRequestMiddleware() gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid gzip body"})
 				return
 			}
-			defer gr.Close()
+			defer func() {
+				if err := gr.Close(); err != nil {
+					_ = c.Error(fmt.Errorf("gzip reader close error: %w", err))
+				}
+			}()
 			body, err := io.ReadAll(gr)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Failed to read gzip body"})
