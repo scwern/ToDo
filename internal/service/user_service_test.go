@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"ToDo/internal/domain/user"
-	_ "github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -43,7 +43,7 @@ func ApplyMigrations(addr, migrationPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrate: %w", err)
 	}
-	defer m.Close()
+	defer func() { err, _ = m.Close() }()
 
 	err = m.Up()
 	if err != nil {

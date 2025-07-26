@@ -43,20 +43,26 @@ func (r *TaskRepository) processDeletions() {
 		case id, ok := <-r.deleteCh:
 			if !ok {
 				if len(batch) > 0 {
-					r.deleteBatch(batch)
+					if err := r.deleteBatch(batch); err != nil {
+						log.Printf("error deleting final batch: %v", err)
+					}
 				}
 				return
 			}
 
 			batch = append(batch, id)
 			if len(batch) >= batchSize {
-				r.deleteBatch(batch)
+				if err := r.deleteBatch(batch); err != nil {
+					log.Printf("error deleting batch: %v", err)
+				}
 				batch = nil
 			}
 
 		case <-r.stopCh:
 			if len(batch) > 0 {
-				r.deleteBatch(batch)
+				if err := r.deleteBatch(batch); err != nil {
+					log.Printf("error deleting batch on stop: %v", err)
+				}
 			}
 			return
 		}
@@ -72,7 +78,11 @@ func (r *TaskRepository) deleteBatch(ids []uuid.UUID) error {
 		log.Printf("Failed to begin transaction: %v", err)
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
+			log.Printf("failed to rollback transaction: %v", err)
+		}
+	}()
 
 	_, err = tx.Exec(ctx, `DELETE FROM tasks WHERE uid = ANY($1)`, ids)
 	if err != nil {
@@ -80,13 +90,13 @@ func (r *TaskRepository) deleteBatch(ids []uuid.UUID) error {
 		return fmt.Errorf("failed to delete tasks: %w", err)
 	}
 
-	err = tx.Commit(ctx)
-	if err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		log.Printf("Failed to commit transaction: %v", err)
-	} else {
-		log.Printf("Successfully deleted %d tasks", len(ids))
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
-	return err
+
+	log.Printf("Successfully deleted %d tasks", len(ids))
+	return nil
 }
 
 func (r *TaskRepository) Close() {
