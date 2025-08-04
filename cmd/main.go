@@ -22,7 +22,12 @@ import (
 func main() {
 	ctx := context.Background()
 	log.Println("Starting application...")
-	cfg := config.Load()
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+	log.Printf("Loaded config: %+v", cfg)
 
 	dbURL := cfg.DBURL()
 	log.Printf("Connecting to DB with URL: %s", dbURL)
