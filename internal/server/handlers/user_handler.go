@@ -10,14 +10,17 @@ import (
 	"net/http"
 )
 
+// UserHandler предоставляет HTTP-обработчики для операций с пользователями.
 type UserHandler struct {
 	service *service.UserService
 }
 
+// NewUserHandler создает новый экземпляр UserHandler.
 func NewUserHandler(service *service.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
+// GetAll обрабатывает HTTP-запрос на получение всех пользователей.
 func (h *UserHandler) GetAll(c *gin.Context) {
 	users, err := h.service.GetAll()
 	if err != nil {
@@ -33,6 +36,7 @@ func (h *UserHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, userDTOs)
 }
 
+// GetByID обрабатывает HTTP-запрос на получение пользователя по UUID.
 func (h *UserHandler) GetByID(c *gin.Context) {
 	idStr := c.Param("id")
 	fmt.Println("Received ID:", idStr)
@@ -56,6 +60,7 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, userdto.ToUserDTO(*user))
 }
 
+// Create обрабатывает HTTP-запрос на создание нового пользователя.
 func (h *UserHandler) Create(c *gin.Context) {
 	var input userdto.CreateUserDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -80,6 +85,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
+// Update обрабатывает HTTP-запрос на обновление пользователя по UUID.
 func (h *UserHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -103,6 +109,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, updated)
 }
 
+// Delete обрабатывает HTTP-запрос на удаление пользователя по UUID.
 func (h *UserHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
