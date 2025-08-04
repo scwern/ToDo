@@ -8,14 +8,17 @@ import (
 	"net/http"
 )
 
+// TaskHandler предоставляет HTTP-обработчики для операций с задачами.
 type TaskHandler struct {
 	service *service.TaskService
 }
 
+// NewTaskHandler создает новый экземпляр TaskHandler.
 func NewTaskHandler(service *service.TaskService) *TaskHandler {
 	return &TaskHandler{service: service}
 }
 
+// GetAll обрабатывает HTTP-запрос на получение всех задач пользователя.
 func (h *TaskHandler) GetAll(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
@@ -43,6 +46,7 @@ func (h *TaskHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, taskDTOs)
 }
 
+// GetByID обрабатывает HTTP-запрос на получение задачи по UUID.
 func (h *TaskHandler) GetByID(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
@@ -71,6 +75,7 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, taskdto.ToTaskDTO(*task))
 }
 
+// Create обрабатывает HTTP-запрос на создание новой задачи.
 func (h *TaskHandler) Create(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
@@ -108,6 +113,7 @@ func (h *TaskHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
+// Update обрабатывает HTTP-запрос на обновление задачи по UUID.
 func (h *TaskHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -132,6 +138,7 @@ func (h *TaskHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, taskdto.ToTaskDTO(*updated))
 }
 
+// Delete обрабатывает HTTP-запрос на удаление задачи по UUID.
 func (h *TaskHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
