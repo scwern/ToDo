@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// UserRepositoryInterface определяет поведение хранилища пользователей.
 type UserRepositoryInterface interface {
 	GetByEmail(email string) (*user.User, error)
 	GetAll() ([]user.User, error)
@@ -15,46 +14,74 @@ type UserRepositoryInterface interface {
 	Delete(id uuid.UUID) error
 }
 
-// UserService реализует бизнес-логику работы с пользователями.
 type UserService struct {
 	repo UserRepositoryInterface
 }
 
-// NewUserService создает новый экземпляр UserService.
+// NewUserService creates a new user service instance
+// @Summary Create user service
+// @Tags Users
+// @Router /user-service [post]
 func NewUserService(repo UserRepositoryInterface) *UserService {
 	return &UserService{repo: repo}
 }
 
-// GetByEmail возвращает пользователя по email.
+// GetByEmail finds user by email
+// @Summary Find user by email
+// @Tags Users
+// @Param email query string true "User email"
+// @Success 200 {object} user.User
+// @Router /users/search [get]
 func (s *UserService) GetByEmail(email string) (*user.User, error) {
 	return s.repo.GetByEmail(email)
 }
 
-// GetAll возвращает всех пользователей.
+// GetAll returns all users
+// @Summary Get all users
+// @Tags Users
+// @Success 200 {array} user.User
+// @Router /users [get]
 func (s *UserService) GetAll() ([]user.User, error) {
 	return s.repo.GetAll()
 }
 
-// GetById возвращает пользователя по UUID.
+// GetById returns user by ID
+// @Summary Get user by ID
+// @Tags Users
+// @Param id path string true "User UUID"
+// @Success 200 {object} user.User
+// @Router /users/{id} [get]
 func (s *UserService) GetById(id uuid.UUID) (*user.User, error) {
 	return s.repo.GetById(id)
 }
 
-// Create создает нового пользователя.
+// Create creates new user
+// @Summary Create user
+// @Tags Users
+// @Param input body user.User true "User data"
+// @Success 200 {object} user.User
+// @Router /users [post]
 func (s *UserService) Create(u user.User) (user.User, error) {
-	createdUser, err := s.repo.Create(u)
-	if err != nil {
-		return user.User{}, err
-	}
-	return createdUser, nil
+	return s.repo.Create(u)
 }
 
-// Update обновляет существующего пользователя.
+// Update updates existing user
+// @Summary Update user
+// @Tags Users
+// @Param id path string true "User UUID"
+// @Param input body user.User true "Updated user data"
+// @Success 200 {object} user.User
+// @Router /users/{id} [put]
 func (s *UserService) Update(id uuid.UUID, updated user.User) (*user.User, error) {
 	return s.repo.Update(id, updated)
 }
 
-// Delete удаляет пользователя по UUID.
+// Delete removes user
+// @Summary Delete user
+// @Tags Users
+// @Param id path string true "User UUID"
+// @Success 200
+// @Router /users/{id} [delete]
 func (s *UserService) Delete(id uuid.UUID) error {
 	return s.repo.Delete(id)
 }

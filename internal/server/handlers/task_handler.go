@@ -9,16 +9,27 @@ import (
 )
 
 // TaskHandler предоставляет HTTP-обработчики для операций с задачами.
+// @Description Обрабатывает CRUD операции для задач пользователей
 type TaskHandler struct {
 	service *service.TaskService
 }
 
 // NewTaskHandler создает новый экземпляр TaskHandler.
+// @Summary Создать обработчик задач
 func NewTaskHandler(service *service.TaskService) *TaskHandler {
 	return &TaskHandler{service: service}
 }
 
 // GetAll обрабатывает HTTP-запрос на получение всех задач пользователя.
+// @Summary Получить все задачи
+// @Description Возвращает список задач для текущего пользователя
+// @Tags Tasks
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {array} taskdto.DTO
+// @Failure 401 {object} object "Не авторизован"
+// @Failure 500 {object} object "Внутренняя ошибка сервера"
+// @Router /tasks [get]
 func (h *TaskHandler) GetAll(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
@@ -47,6 +58,16 @@ func (h *TaskHandler) GetAll(c *gin.Context) {
 }
 
 // GetByID обрабатывает HTTP-запрос на получение задачи по UUID.
+// @Summary Получить задачу по ID
+// @Description Возвращает задачу по указанному идентификатору
+// @Tags Tasks
+// @Produce json
+// @Param id path string true "UUID задачи"
+// @Security ApiKeyAuth
+// @Success 200 {object} taskdto.DTO
+// @Failure 400 {object} object "Неверный формат UUID"
+// @Failure 404 {object} object "Задача не найдена"
+// @Router /tasks/{id} [get]
 func (h *TaskHandler) GetByID(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
@@ -76,6 +97,17 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 }
 
 // Create обрабатывает HTTP-запрос на создание новой задачи.
+// @Summary Создать новую задачу
+// @Description Создает новую задачу для текущего пользователя
+// @Tags Tasks
+// @Accept json
+// @Produce json
+// @Param input body taskdto.CreateTaskDTO true "Данные задачи"
+// @Security ApiKeyAuth
+// @Success 201 {object} taskdto.DTO
+// @Failure 400 {object} object "Неверные входные данные"
+// @Failure 409 {object} object "Задача с таким названием уже существует"
+// @Router /tasks [post]
 func (h *TaskHandler) Create(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
@@ -114,6 +146,18 @@ func (h *TaskHandler) Create(c *gin.Context) {
 }
 
 // Update обрабатывает HTTP-запрос на обновление задачи по UUID.
+// @Summary Обновить задачу
+// @Description Обновляет существующую задачу
+// @Tags Tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "UUID задачи"
+// @Param input body taskdto.CreateTaskDTO true "Обновленные данные задачи"
+// @Security ApiKeyAuth
+// @Success 200 {object} taskdto.DTO
+// @Failure 400 {object} object "Неверные входные данные"
+// @Failure 404 {object} object "Задача не найдена"
+// @Router /tasks/{id} [put]
 func (h *TaskHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -139,6 +183,15 @@ func (h *TaskHandler) Update(c *gin.Context) {
 }
 
 // Delete обрабатывает HTTP-запрос на удаление задачи по UUID.
+// @Summary Удалить задачу
+// @Description Удаляет задачу по указанному идентификатору
+// @Tags Tasks
+// @Param id path string true "UUID задачи"
+// @Security ApiKeyAuth
+// @Success 204 "Задача успешно удалена"
+// @Failure 400 {object} object "Неверный формат UUID"
+// @Failure 404 {object} object "Задача не найдена"
+// @Router /tasks/{id} [delete]
 func (h *TaskHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
