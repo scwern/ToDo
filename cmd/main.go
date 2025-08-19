@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "ToDo/docs"
 	"ToDo/internal/config"
 	"ToDo/internal/repository/dbstorage"
 	inmemory "ToDo/internal/repository/in-memory"
@@ -11,6 +12,8 @@ import (
 	"errors"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +22,12 @@ import (
 	"time"
 )
 
+// @title ToDo API
+// @version 1.0
+// @description API для управления задачами
+
+// @host localhost:8080
+// @BasePath /
 func main() {
 	ctx := context.Background()
 	log.Println("Starting application...")
@@ -62,6 +71,13 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService)
 
 	router := server.NewRouter(taskHandler, userHandler)
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(
+		swaggerFiles.Handler,
+		ginSwagger.URL("/docs/swagger.json"),
+	))
+
+	router.StaticFile("/docs/swagger.json", "./docs/swagger.json")
 
 	srv := &http.Server{
 		Addr:    cfg.HTTPAddr(),

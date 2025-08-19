@@ -4,6 +4,7 @@ import (
 	"ToDo/internal/domain/task"
 )
 
+// ToTask преобразует CreateTaskDTO в доменную сущность task.Task.
 func ToTask(dto CreateTaskDTO) task.Task {
 	status := task.Status(dto.Status)
 	if status == 0 {
@@ -13,6 +14,7 @@ func ToTask(dto CreateTaskDTO) task.Task {
 	return task.NewTask(dto.Title, dto.Description, status)
 }
 
+// ToTaskDTO преобразует доменную сущность task.Task в DTO для передачи клиенту.
 func ToTaskDTO(t task.Task) DTO {
 	return DTO{
 		ID:          t.ID().String(),
